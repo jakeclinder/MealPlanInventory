@@ -1,0 +1,20 @@
+/* Tablet-friendly global resets */
+body {
+  margin: 0;
+  /* Prevent pull-to-refresh on iOS/Android */
+  overscroll-behavior: none;
+  /* Prevent text selection on UI chrome; inputs opt back in below */
+  -webkit-user-select: none;
+  user-select: none;
+  /* Kill the 300 ms tap delay */
+  touch-action: manipulation;
+  /* Remove tap highlight flash on iOS */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Re-enable text selection inside inputs */
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
