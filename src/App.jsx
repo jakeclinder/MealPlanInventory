@@ -134,6 +134,7 @@ function InventoryView({ inventory, setInventory }) {
   const [dinners, setDinners] = useState("");
   const [selectedId, setSelectedId] = useState(null);
   const [dragOverLoc, setDragOverLoc] = useState(null);
+  const [dragOverCat, setDragOverCat] = useState(null);
   const inputRef = useRef(null);
 
   const addItem = () => {
@@ -159,12 +160,16 @@ function InventoryView({ inventory, setInventory }) {
     }).filter(Boolean));
   };
 
-  const moveItem = (id, newLocation) => {
+  // newCategory is optional — omit to keep the existing category
+  const moveItem = (id, newLocation, newCategory = null) => {
     setInventory(prev => prev.map(item =>
-      item.id === id ? { ...item, location: newLocation } : item
+      item.id === id
+        ? { ...item, location: newLocation, ...(newCategory ? { category: newCategory } : {}) }
+        : item
     ));
     setSelectedId(null);
     setDragOverLoc(null);
+    setDragOverCat(null);
   };
 
   const handleDragStart = (e, id) => {
@@ -173,11 +178,19 @@ function InventoryView({ inventory, setInventory }) {
     setSelectedId(id);
   };
 
+  // Drop onto the column background → change location only
   const handleDrop = (e, locationId) => {
     e.preventDefault();
     const id = e.dataTransfer.getData("text/plain");
     if (id) moveItem(id, locationId);
-    setDragOverLoc(null);
+  };
+
+  // Drop onto a category group → change location AND category
+  const handleDropOnCat = (e, locationId, categoryId) => {
+    e.preventDefault();
+    e.stopPropagation(); // don't also fire the column-level drop
+    const id = e.dataTransfer.getData("text/plain");
+    if (id) moveItem(id, locationId, categoryId);
   };
 
   const selectedItem = selectedId ? inventory.find(i => i.id === selectedId) : null;
@@ -233,10 +246,21 @@ function InventoryView({ inventory, setInventory }) {
       {selectedItem && (
         <div style={S.moveBar}>
           <span style={S.moveLabel}>Move <b>{selectedItem.name}</b> to:</span>
+          {/* Location buttons */}
           <div style={{ display: "flex", gap: 6 }}>
             {LOCATIONS.filter(l => l.id !== selectedItem.location).map(l => (
               <button key={l.id} onClick={() => moveItem(selectedId, l.id)} style={S.moveBtn}>
                 {l.emoji} {l.label}
+              </button>
+            ))}
+          </div>
+          {/* Divider */}
+          <div style={{ width: 1, alignSelf: "stretch", background: "#E8E4DF", margin: "0 4px" }} />
+          {/* Category buttons */}
+          <div style={{ display: "flex", gap: 6 }}>
+            {CATEGORIES.filter(c => c.id !== selectedItem.category).map(c => (
+              <button key={c.id} onClick={() => moveItem(selectedId, selectedItem.location, c.id)} style={S.moveBtnCat}>
+                {c.emoji} {c.label}
               </button>
             ))}
           </div>
@@ -252,8 +276,8 @@ function InventoryView({ inventory, setInventory }) {
           const isDropTarget = dragOverLoc === location.id;
           return (
             <div key={location.id}
-              onDragOver={e => { e.preventDefault(); setDragOverLoc(location.id); }}
-              onDragLeave={() => setDragOverLoc(null)}
+              onDragOver={e => { e.preventDefault(); setDragOverLoc(location.id); setDragOverCat(null); }}
+              onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) { setDragOverLoc(null); setDragOverCat(null); } }}
               onDrop={e => handleDrop(e, location.id)}
               style={{
                 ...S.invCol,
@@ -270,14 +294,20 @@ function InventoryView({ inventory, setInventory }) {
                   const items = locItems[category.id];
                   if (items.length === 0) return null;
                   return (
-                    <div key={category.id} style={S.catGroup}>
+                    <div key={category.id}
+                      style={{
+                        ...S.catGroup,
+                        ...(dragOverLoc === location.id && dragOverCat === category.id ? S.catDropTarget : {}),
+                      }}
+                      onDragOver={e => { e.preventDefault(); e.stopPropagation(); setDragOverLoc(location.id); setDragOverCat(category.id); }}
+                      onDrop={e => handleDropOnCat(e, location.id, category.id)}>
                       <div style={S.catLabel}>{category.emoji} {category.label}</div>
                       <div style={S.chipWrap}>
                         {items.map(item => (
                           <div key={item.id}
                             draggable
                             onDragStart={e => handleDragStart(e, item.id)}
-                            onDragEnd={() => { setSelectedId(null); setDragOverLoc(null); }}
+                            onDragEnd={() => { setSelectedId(null); setDragOverLoc(null); setDragOverCat(null); }}
                             onClick={() => setSelectedId(prev => prev === item.id ? null : item.id)}
                             style={{
                               ...S.chip,
@@ -644,6 +674,23 @@ const S = {
     cursor: "pointer",
     fontFamily: "'Outfit',sans-serif",
     whiteSpace: "nowrap",
+  },
+  moveBtnCat: {
+    padding: "6px 14px",
+    background: "#6B8F5E",
+    color: "#fff",
+    border: "none",
+    borderRadius: 8,
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: "pointer",
+    fontFamily: "'Outfit',sans-serif",
+    whiteSpace: "nowrap",
+  },
+  catDropTarget: {
+    outline: "2px dashed #D4856A",
+    outlineOffset: 3,
+    borderRadius: 8,
   },
   moveCancelBtn: {
     padding: "6px 12px",
