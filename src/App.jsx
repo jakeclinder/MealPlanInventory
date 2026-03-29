@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { load, save } from "./storage";
+import { supabase } from "./supabase";
 
 // ── Date helpers ──
 function getMonday(d) {
@@ -99,6 +100,9 @@ export default function KitchenHub() {
               <span style={{ fontSize: 18 }}>{t.icon}</span> {t.label}
             </button>
           ))}
+          <button onClick={() => supabase.auth.signOut()} style={S.signOutBtn}>
+            Sign out
+          </button>
         </nav>
       </header>
 
@@ -518,6 +522,18 @@ const S = {
     background: "#2D2A26",
     color: "#FAF7F2",
     borderColor: "#2D2A26",
+  },
+  signOutBtn: {
+    padding: "8px 14px",
+    border: "1.5px solid #E8E4DF",
+    borderRadius: 10,
+    background: "transparent",
+    fontFamily: "'Outfit',sans-serif",
+    fontSize: 13,
+    fontWeight: 500,
+    color: "#B5AFA8",
+    cursor: "pointer",
+    marginLeft: 4,
   },
 
   // Main
