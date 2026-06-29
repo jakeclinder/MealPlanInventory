@@ -35,6 +35,7 @@ const LOCATIONS = [
   { id: "freezer",         label: "Inside Freezer",  emoji: "🧊" },
   { id: "outside_freezer", label: "Outside Freezer", emoji: "❄️" },
   { id: "fridge",          label: "Fridge",          emoji: "🌡️" },
+  { id: "pantry",          label: "Pantry",          emoji: "🗄️" },
 ];
 
 let idCounter = Date.now();
