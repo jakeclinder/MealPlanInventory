@@ -54,17 +54,17 @@ function writeLocalCache(key, value) {
 // ── Public API ────────────────────────────────────────────────────────────────
 
 export async function load(key, fallback) {
-  const cached = readLocalCache(key);
-
   try {
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) {
-      // Not authenticated — return whatever we have locally.
-      return cached.value ?? fallback;
+      return fallback;
     }
+
+    const cacheKey = `user:${user.id}:${key}`;
+    const cached = readLocalCache(cacheKey);
 
     const { data, error } = await supabase
       .from("user_data")
@@ -84,28 +84,27 @@ export async function load(key, fallback) {
       new Date(data.updated_at) > new Date(cached.updated_at);
 
     if (supabaseNewer) {
-      writeLocalCache(key, data.value);
+      writeLocalCache(cacheKey, data.value);
       return data.value;
     }
 
     return cached.value ?? fallback;
   } catch {
     // Network failure, Supabase down, etc. — degrade gracefully.
-    return cached.value ?? fallback;
+    return fallback;
   }
 }
 
 export async function save(key, val) {
-  // 1. Persist locally right away so the UI never lags.
-  writeLocalCache(key, val);
-
-  // 2. Sync to Supabase.
+  // Sync to Supabase and write to the user-scoped cache.
   try {
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) return;
+
+    writeLocalCache(`user:${user.id}:${key}`, val);
 
     const { error } = await supabase.from("user_data").upsert(
       {
