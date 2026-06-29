@@ -23,11 +23,12 @@ function isToday(d) {
 }
 
 const CATEGORIES = [
-  { id: "protein", label: "Protein", emoji: "🥩" },
-  { id: "veggie",  label: "Veggie",  emoji: "🥦" },
-  { id: "fruit",   label: "Fruit",   emoji: "🍎" },
-  { id: "dairy",   label: "Dairy",   emoji: "🧀" },
-  { id: "other",   label: "Other",   emoji: "📦" },
+  { id: "protein",    label: "Protein",    emoji: "🥩" },
+  { id: "veggie",     label: "Veggie",     emoji: "🥦" },
+  { id: "fruit",      label: "Fruit",      emoji: "🍎" },
+  { id: "dairy",      label: "Dairy",      emoji: "🧀" },
+  { id: "ingredient", label: "Ingredient", emoji: "🧂" },
+  { id: "other",      label: "Other",      emoji: "📦" },
 ];
 
 const LOCATIONS = [
